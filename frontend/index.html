@@ -1,0 +1,46 @@
+<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fiş Toplama</title><link rel="stylesheet" href="/assets/style.css"></head><body>
+<section id="authView" class="auth-view"><div class="auth-card"><div class="auth-brand"><div class="logo">F</div><div><h1>Fiş Toplama</h1><p>Hesabınla giriş yap</p></div></div><form id="loginForm"><label>E-posta<input id="email" type="email" autocomplete="email" required placeholder="ornek@firma.com"></label><label>Şifre<input id="password" type="password" autocomplete="current-password" required placeholder="••••••••"></label><button id="loginBtn" class="button primary wide" type="submit">Giriş Yap</button><div id="authError" class="auth-error"></div></form></div></section>
+<div id="appView" class="hidden"><header class="topbar"><div class="brand"><div class="logo">F</div><div><h1>Fiş Toplama</h1><p>Python + OpenCV ile otomatik tarama</p></div></div><div class="top-actions"><div id="apiStatus" class="status"><span></span> Servis kontrol ediliyor</div><div id="userEmail" class="user-email"></div><button id="logoutBtn" class="logout-btn">Çıkış</button></div></header>
+<main class="container"><section class="hero panel"><div><span class="eyebrow">YENİ FİŞ</span><h2>Fişi çek veya galeriden seç.</h2><p>Fotoğraf Python OpenCV ile otomatik algılanır, perspektifi düzeltilir ve kırpılır.</p></div><div class="form-grid"><label>Mağaza / Şube<input id="branch" placeholder="Örn. Üsküdar"></label><label>Açıklama<input id="note" placeholder="İsteğe bağlı"></label></div><div class="actions"><label class="button primary" for="cameraInput">📷 Kameradan Çek</label><label class="button secondary" for="galleryInput">🖼 Galeriden Seç</label><input id="cameraInput" type="file" accept="image/*" capture="environment" hidden><input id="galleryInput" type="file" accept="image/*" multiple hidden></div><div id="dropZone" class="dropzone"><strong>Fotoğrafları buraya da sürükleyebilirsin</strong><span>JPG · PNG · WEBP · Maks. 20 MB</span></div></section>
+<section id="queuePanel" class="panel hidden"><div class="section-head"><div><span class="eyebrow">TARAMA</span><h2>İşlemdekiler</h2></div><button id="clearDone" class="text-btn">Tamamlananları temizle</button></div><div id="queue" class="queue"></div></section>
+<section class="panel"><div class="section-head results-head"><div><span class="eyebrow">SONUÇLAR</span><h2>Taranan Fişler</h2><p><b id="count">0</b> fiş hesabında hazır. PDF'e girecek fişleri işaretle.</p></div><div class="pdf-actions"><button id="selectAll" class="button secondary small">Tümünü Seç</button><button id="pdfBtn" class="button primary small" disabled>📄 PDF Oluştur (<span id="selectedCount">0</span>)</button></div></div><div id="empty" class="empty"><div>🧾</div><strong>Henüz taranmış fiş yok</strong><span>Yukarıdan bir fotoğraf eklediğinde burada görünecek.</span></div><div id="grid" class="grid"></div></section>
+<section class="panel pdf-archive-panel"><div class="section-head"><div><span class="eyebrow">ARŞİV</span><h2>Oluşturulan PDF'ler</h2><p>PDF'lerin hesabına bağlı olarak bulutta saklanır ve tüm cihazlarında görünür.</p></div></div><div id="pdfArchive" class="pdf-archive"></div></section></main></div>
+
+<div id="cornerModal" class="corner-modal hidden" aria-hidden="true">
+  <div class="corner-dialog">
+    <div class="corner-head">
+      <div>
+        <span class="eyebrow">KÖŞE DÜZELTME</span>
+        <h2>Fişin 4 köşesini kontrol et</h2>
+        <p>Noktaları fişin gerçek köşelerine sürükle. Sonra tekrar tara.</p>
+      </div>
+      <button id="cornerClose" class="corner-close" type="button">✕</button>
+    </div>
+    <div id="cornerStage" class="corner-stage">
+      <img id="cornerImage" alt="Orijinal fiş">
+      <svg id="cornerSvg" class="corner-svg" preserveAspectRatio="none">
+        <polygon id="cornerPolygon"></polygon>
+      </svg>
+      <button class="corner-handle" data-index="0" aria-label="Sol üst köşe"></button>
+      <button class="corner-handle" data-index="1" aria-label="Sağ üst köşe"></button>
+      <button class="corner-handle" data-index="2" aria-label="Sağ alt köşe"></button>
+      <button class="corner-handle" data-index="3" aria-label="Sol alt köşe"></button>
+    </div>
+    <div class="corner-toolbar">
+      <label>Görünüm
+        <select id="scanMode">
+          <option value="scan" selected>Tarama</option>
+          <option value="color">Renkli belge</option>
+          <option value="original">Doğal</option>
+          <option value="gray">Gri</option>
+          <option value="bw">Siyah / Beyaz</option>
+        </select>
+      </label>
+      <div class="corner-actions">
+        <button id="cornerCancel" class="button secondary" type="button">Vazgeç</button>
+        <button id="cornerApply" class="button primary" type="button">Köşeleri Uygula ve Tara</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="toast" class="toast"></div><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script><script src="/assets/config.js"></script><script src="/assets/app.js"></script></body></html>
