@@ -1,0 +1,79 @@
+name: Build FisToplama Pro
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+concurrency:
+  group: fistoplama-pages
+  cancel-in-progress: true
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+jobs:
+  android-web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Create Android and Web platforms
+        run: flutter create --project-name fis_toplama_pro --org com.fistoplama --platforms=android,web .
+      - name: Download OpenCV locally
+        run: curl -L --retry 3 --fail https://docs.opencv.org/4.x/opencv.js -o web/opencv.js
+      - name: Patch platforms
+        run: python3 scripts/patch_platforms.py
+      - name: Verify scanner files
+        run: |
+          test -s web/opencv.js
+          test -s web/opencv_receipt.js
+          grep -q opencv_receipt.js web/index.html
+      - run: flutter pub get
+      - name: Build Android APK
+        run: flutter build apk --release --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }} --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
+      - name: Build Web
+        run: flutter build web --release --base-href "/${{ github.event.repository.name }}/" --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }} --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
+      - name: Verify built scanner files
+        run: |
+          test -s build/web/opencv.js
+          test -s build/web/opencv_receipt.js
+          grep -q opencv_receipt.js build/web/index.html
+      - uses: actions/upload-artifact@v4
+        with:
+          name: FisToplama-Pro-Android
+          path: build/app/outputs/flutter-apk/app-release.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: FisToplama-Pro-Web
+          path: build/web
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+  deploy-web:
+    needs: android-web
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
+  ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter create --project-name fis_toplama_pro --org com.fistoplama --platforms=ios .
+      - run: python3 scripts/patch_platforms.py
+      - run: flutter pub get
+      - run: flutter build ios --simulator --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }} --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
+      - run: ditto -c -k --sequesterRsrc --keepParent build/ios/iphonesimulator/Runner.app FisToplama-Pro-iOS-Simulator.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: FisToplama-Pro-iOS-Simulator
+          path: FisToplama-Pro-iOS-Simulator.zip
